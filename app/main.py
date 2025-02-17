@@ -27,7 +27,7 @@ def calculate_sim(model, database_eb, user_input):
 if __name__ == "__main__":
     user_input = ["cough, fever, and sour throat"]
     model = SentenceTransformer('sentence-transformers/paraphrase-MiniLM-L6-v2')
-    database_embedding = r"D:\Users\Joy\Desktop\Joy\data\input\disease_embedding.json"
+    database_embedding = "../data/input/disease_embedding.json"
     database_eb = get_database(database_embedding)
 
     base_directory = os.path.dirname(os.path.dirname(__file__))

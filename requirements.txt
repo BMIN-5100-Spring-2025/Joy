@@ -1,1 +1,4 @@
-pytest
+sentence_transformers
+scikit-learn
+numpy
+pandas
