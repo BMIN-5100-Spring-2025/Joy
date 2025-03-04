@@ -27,14 +27,14 @@ def calculate_sim(model, database_eb, user_input):
 if __name__ == "__main__":
     user_input = ["cough, fever, and sour throat"]
     model = SentenceTransformer('sentence-transformers/paraphrase-MiniLM-L6-v2')
-    database_embedding = r"D:\Users\Joy\Desktop\Joy\data\input\disease_embedding.json"
+    # database_embedding = "../data/input/disease_embedding.json"
+    input_directory = os.getenv('INPUT_DIR', '/data/input')
+    output_directory = os.getenv('OUTPUT_DIR', '/data/output')
+    output_file = os.path.join(output_directory, 'result.json')
+    database_embedding = os.path.join(input_directory, 'disease_embedding.json')
     database_eb = get_database(database_embedding)
 
-    base_directory = os.path.dirname(os.path.dirname(__file__))
-
-    # input_directory = os.getenv('INPUT_DIR', os.path.join(base_directory, 'data/input/'))
-    output_directory = os.getenv('OUTPUT_DIR', os.path.join(base_directory, 'data/output/'))
-    output_file = os.path.join(output_directory, 'result.json')
+    # base_directory = os.path.dirname(os.path.dirname(__file__))
 
     top_3 = calculate_sim(model, database_eb, user_input)
     write_csv(output_file, top_3)
