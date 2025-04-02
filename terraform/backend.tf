@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket = "diseasepredictor2025"
+    bucket = "bmin5100-terraform-state"
     key    = "enhuz@seas.upenn.edu-diseasepredictor/terraform.tfstate"
     region = "us-east-1"
   }
