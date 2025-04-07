@@ -34,7 +34,13 @@ resource "aws_iam_role_policy_attachment" "execution_pre_attach" {
 data "aws_iam_policy_document" "execution_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["ec2:Describe*"]
+    actions   = ["ec2:Describe*",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:CreateNetworkInterface",
+        "ec2:AttachNetworkInterface",
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"]
     resources = ["*"]
   }
 }
@@ -75,7 +81,8 @@ data "aws_iam_policy_document" "task_policy" {
     effect = "Allow"
     actions = [
       "s3:GetObject",
-      "s3:ListBucket"
+      "s3:ListBucket",
+      "s3:*"
     ]
     resources = [
       data.aws_s3_bucket.diseasepredictor2025.arn,
@@ -103,14 +110,16 @@ resource "aws_ecs_task_definition" "disease_predictor" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   memory                   = 2048
+  cpu = "512"
   execution_role_arn = aws_iam_role.execution_role.arn
   task_role_arn = aws_iam_role.task_role.arn
   container_definitions    = jsonencode([
     {
       name  = "disease_predictor"
-      image = "061051226319.dkr.ecr.us-east-1.amazonaws.com/disease_predictor:v1"
+      image = "${aws_ecr_repository.disease_predictor.repository_url}:v1"
       environment = [
-        { name = "s3_arn", value = data.aws_s3_bucket.diseasepredictor2025.arn }
+        { name = "s3_arn", value = data.aws_s3_bucket.diseasepredictor2025.arn },
+        { name = "MODE", value = "s3"}
       ]
     }
   ])
