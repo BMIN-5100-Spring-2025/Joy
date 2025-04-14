@@ -9,7 +9,7 @@ data "aws_s3_bucket" "diseasepredictor2025"{
 data "aws_caller_identity" "current" {}
 
 # Define role
-data "aws_iam_policy_document" "assume_role_policy" {
+data "aws_iam_policy_document" "assume_role_policy_dp" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -20,18 +20,18 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 # Create role
-resource "aws_iam_role" "execution_role" {
-  name               = "execution_role"
+resource "aws_iam_role" "execution_role_dp" {
+  name               = "execution_role_dp"
   //path               = "/system/"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy_dp.json
 }
 # Attach pre-defined policy 
 resource "aws_iam_role_policy_attachment" "execution_pre_attach" {
-  role       = aws_iam_role.execution_role.name
+  role       = aws_iam_role.execution_role_dp.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 # Define policy 
-data "aws_iam_policy_document" "execution_policy" {
+data "aws_iam_policy_document" "execution_policy_dp" {
   statement {
     effect    = "Allow"
     actions   = ["ec2:Describe*",
@@ -45,20 +45,20 @@ data "aws_iam_policy_document" "execution_policy" {
   }
 }
 # Create policy
-resource "aws_iam_policy" "execution_policy" {
-  name        = "execution_policy"
+resource "aws_iam_policy" "execution_policy_dp" {
+  name        = "execution_policy_dp"
   description = "An execution policy"
-  policy      = data.aws_iam_policy_document.execution_policy.json
+  policy      = data.aws_iam_policy_document.execution_policy_dp.json
 }
 # Attach policy
 resource "aws_iam_role_policy_attachment" "execution_attach" {
-  role       = aws_iam_role.execution_role.name
-  policy_arn = aws_iam_policy.execution_policy.arn
+  role       = aws_iam_role.execution_role_dp.name
+  policy_arn = aws_iam_policy.execution_policy_dp.arn
 }
 
 
 # task_role definition 
-data "aws_iam_policy_document" "task_role_policy" {
+data "aws_iam_policy_document" "task_role_policy_dp" {
   statement {
     effect = "Allow"
     actions = ["sts:AssumeRole"]
@@ -71,12 +71,12 @@ data "aws_iam_policy_document" "task_role_policy" {
 }
 
 # task_role Create
-resource "aws_iam_role" "task_role" {
-    name = "task_role"
-    assume_role_policy = data.aws_iam_policy_document.task_role_policy.json
+resource "aws_iam_role" "task_role_dp" {
+    name = "task_role_dp"
+    assume_role_policy = data.aws_iam_policy_document.task_role_policy_dp.json
 }
 # task_role policy define
-data "aws_iam_policy_document" "task_policy" {
+data "aws_iam_policy_document" "task_policy_dp" {
   statement {
     effect = "Allow"
     actions = [
@@ -91,15 +91,15 @@ data "aws_iam_policy_document" "task_policy" {
   }
 }
 # task_role policy create 
-resource "aws_iam_policy" "task_policy" {
-  name        = "task_policy"
+resource "aws_iam_policy" "task_policy_dp" {
+  name        = "task_policy_dp"
   description = "A task policy"
-  policy      = data.aws_iam_policy_document.task_policy.json
+  policy      = data.aws_iam_policy_document.task_policy_dp.json
 }
 # task policy attachment
 resource "aws_iam_role_policy_attachment" "task_attach" {
-  role       = aws_iam_role.task_role.name
-  policy_arn = aws_iam_policy.task_policy.arn
+  role       = aws_iam_role.task_role_dp.name
+  policy_arn = aws_iam_policy.task_policy_dp.arn
 }
 
 
@@ -111,16 +111,25 @@ resource "aws_ecs_task_definition" "disease_predictor" {
   network_mode             = "awsvpc"
   memory                   = 2048
   cpu = "512"
-  execution_role_arn = aws_iam_role.execution_role.arn
-  task_role_arn = aws_iam_role.task_role.arn
+  execution_role_arn = aws_iam_role.execution_role_dp.arn
+  task_role_arn = aws_iam_role.task_role_dp.arn
   container_definitions    = jsonencode([
     {
       name  = "disease_predictor"
-      image = "${aws_ecr_repository.disease_predictor.repository_url}:v1"
+      image = "${aws_ecr_repository.disease_predictor.repository_url}:v1.6"
       environment = [
         { name = "s3_arn", value = data.aws_s3_bucket.diseasepredictor2025.arn },
         { name = "MODE", value = "s3"}
-      ]
+      ],
+      logConfiguration = {
+          "logDriver" = "awslogs",
+          "options" = {
+            "awslogs-group" = "disease_predictor",
+            //"awslogs-create-group" = "true",
+            "awslogs-region" = "us-east-1",
+            "awslogs-stream-prefix" = "ecs"
+          }
+      }
     }
   ])
 }
