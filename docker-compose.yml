@@ -7,6 +7,8 @@ services:
     environment:
       - INPUT_DIR=/data/input
       - OUTPUT_DIR=/data/output
+    env_file:
+      - .env
     volumes:
-      - ./data/input:/data/input:ro
+      - ./data/input:/data/input
       - ./data/output:/data/output

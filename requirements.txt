@@ -2,3 +2,4 @@ sentence_transformers
 scikit-learn
 numpy
 pandas
+boto3
